@@ -148,12 +148,7 @@ function initMap() {
         }
     });
 
-    document.getElementById('submit-button').addEventListener('click', () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-        //updateCoordinates(id, userCoordinates);
-		checkMarkerInPolygons(userCoordinates);
-    });
+   
 }
 
 function placeMarker(location) {
