@@ -4,22 +4,28 @@
 	<meta name="viewport" content="width=device-width"> 
     <title>Geolocation</title>
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-   
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+    integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script> 
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/togeojson/0.16.0/togeojson.js" integrity="sha512-zbCSvezmUbiVidNvMav+PRxM3r51/wQOLuWQnLHHNg2FsbwU4W6fEs0kFYxJOiFEqqE14I6KguU4mrqFIaagyA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	
     <style>
 		#map {
-            height: 90%;
+            height: 100%;
             width: 100%;
         }
         html, body {
             height: 100%;
             margin: 0;
             padding: 0;
+			font-family: Arial, sans-serif;
         }
           #submit-button {
             display: block;
             margin: 20px auto;
             padding: 10px 20px;
             background: #4285F4;
+			background-color: #ff5e57;
             color: white;
             border: none;
             cursor: pointer;
@@ -39,25 +45,19 @@
             
         }
 		
-		@media only screen and (max-width: 768px) {
-			#submit-button {
-				width: 200px;
-			}
-		
-		}
     </style>
 </head>
 <body>
     
-    
     <div id="map"></div>
-	<div id="submit-button">Submit</div>
+	
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCh0Kb5qOr-LMrp9xCVEOsLN7g-Joee-Ks&libraries=marker"></script>
     <script>
 	let map;
 let marker;
 let userCoordinates = {};
 var nearMeLocArr; 
+ let geoJsonLayer;
 
 
 function initMap() {
@@ -72,6 +72,23 @@ function initMap() {
     locationButton.innerHTML = '<i class="fa-solid fa-location-crosshairs fa-xl"></i>';
     locationButton.classList.add("custom-map-control-button");
     map.controls[google.maps.ControlPosition.TOP_RIGHT].push(locationButton);
+	
+	const nextbtn = document.getElementById("submit-button")
+	map.controls[google.maps.ControlPosition.BOTTOM_CENTER].push(nextbtn);
+	
+
+	$.ajax('https://lead.blink.jo/app.kml').done(function (xml) {
+            const geojson = toGeoJSON.kml(xml);
+			console.log(geojson)
+			map.data.addGeoJson(geojson);
+            map.data.setStyle({
+			  fillColor: 0,
+			  fillOpacity: 0,
+			  strokeWeight: 0
+			});
+            
+	});
+   
 
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(position => {
@@ -107,7 +124,13 @@ function initMap() {
 
     map.addListener('click', (event) => {
         placeMarker(event.latLng);
+		checkMarkerInPolygons(event.latLng)
     });
+	
+	map.data.addListener('click', function(event) {
+	  placeMarker(event.latLng)
+	  checkMarkerInPolygons(event.latLng)
+	});
 
     locationButton.addEventListener('click', () => {
         if (navigator.geolocation) {
@@ -128,7 +151,8 @@ function initMap() {
     document.getElementById('submit-button').addEventListener('click', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const id = urlParams.get('id');
-        updateCoordinates(id, userCoordinates);
+        //updateCoordinates(id, userCoordinates);
+		checkMarkerInPolygons(userCoordinates);
     });
 }
 
@@ -161,51 +185,92 @@ function handleLocationError(browserHasGeolocation, pos) {
         : 'Error: Your browser doesn\'t support geolocation.');
 }
 
-function updateCoordinates(id, coordinates) {
-    
-	if(Object.keys(coordinates).length > 0){
-		var data = {
-			gps: `${coordinates.lat},${coordinates.lng}`,
-			//city: "Dubai"
+
+
+function checkMarkerInPolygons(coordinates) {
+            const latLng = coordinates;
+            let insidePolygon = false;
+            let polygonName = '';
 			
+			const urlParams = new URLSearchParams(window.location.search);
+			const category = urlParams.get('category');
 			
-		};
 
-	 
-		
-		var request = new XMLHttpRequest();
+            map.data.forEach(function (feature) {
+                const geometry = feature.getGeometry();
+                if (geometry.getType() === 'Polygon') {
+                    const paths = geometry.getArray()[0].getArray();
+                    const polygon = new google.maps.Polygon({ paths: paths });
+                    if (google.maps.geometry.poly.containsLocation(latLng, polygon)) {
+                        insidePolygon = true;
+                        polygonName = feature.getProperty('name');
+                    }
+                }
+            });
+            if (insidePolygon) {
+                if (polygonName === 'Microwave') {
+					  const infoWindow = new google.maps.InfoWindow({
+							content: `
+								<div style="width: 100px;">
+									<h3>Microwave</h3>
+									<button onclick="window.location.href='https://www.blink.jo/mwvlead'">View</button>
+								</div>
+							`,
+							position: latLng
+						});
 
-	request.open('PUT',  `https://crm.blink.jo/api/2.0/admin/crm/leads/${id}`);
+						infoWindow.open(map);
+					
+                    
+                } 
+				else if (polygonName === 'LLL Microwave') {
+					const infoWindow = new google.maps.InfoWindow({
+							content: `
+								<div style="width: 100px;">
+									<h3>LLL Microwave</h3>
+									<button onclick="window.location.href='https://www.blink.jo/llllead'">View</button>
+								</div>
+							`,
+							position: latLng
+						});
 
-	request.setRequestHeader('Content-Type', 'application/json');
-	request.setRequestHeader('Authorization', 'Basic ODY3N2Q1N2EwMjI4NGYyMzc5OTVkMGQ1Nzg5NDcxOGQ6NGMyMmNlMzA1NDBiNDQ1YjZlNGQyMmJjYTg0ZjRjZjM=');
+						infoWindow.open(map);
+					
+                    
+                }else if (polygonName === 'Fiber') {
+					const infoWindow = new google.maps.InfoWindow({
+							content: `
+								<div style="width: 100px;">
+									<h3>Fiber</h3>
+									<button onclick="window.location.href='https://www.blink.jo/fiberlead'">View</button>
+								</div>
+							`,
+							position: latLng
+						});
 
-	request.onreadystatechange = function () {
-	  if (this.readyState === 4) {
-		console.log('Status:', this.status);
-		console.log('Headers:', this.getAllResponseHeaders());
-		console.log('Body:', this.responseText);
-	  }
-	  if (this.status === 202 ) {
-            console.log('Thank you, location updated');
-        } else {
-            console.log('Error updating coordinates');
+						infoWindow.open(map);
+                    
+                }
+				
+				
+            } else {
+				const infoWindow = new google.maps.InfoWindow({
+							content: `
+								<div>
+									<h3>Not covered</h3>
+									<button onclick="window.location.href='https://www.blink.jo/notcovered'">View</button>
+								</div>
+							`,
+							position: latLng
+						});
+
+						infoWindow.open(map);
+				
+                
+            }
         }
-	};
 
-	request.send(JSON.stringify(data)); 
-	
-	alert('Thank you, location updated');
 
-	
-	}else{
-	
-		console.log("Coordinates are not found")
-	}
-    
-}
-
-// Initialize the map
 initMap();
 
 	
