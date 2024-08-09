@@ -182,6 +182,8 @@ function handleLocationError(browserHasGeolocation, pos) {
 
 
 
+let currentInfoWindow = null;
+
 function checkMarkerInPolygons(coordinates) {
             const latLng = coordinates;
             let insidePolygon = false;
@@ -202,6 +204,9 @@ function checkMarkerInPolygons(coordinates) {
                     }
                 }
             });
+			 if (currentInfoWindow) {
+                    currentInfoWindow.close();
+                }
             if (insidePolygon) {
                 if (polygonName === 'Microwave') {
 					  const infoWindow = new google.maps.InfoWindow({
@@ -215,7 +220,7 @@ function checkMarkerInPolygons(coordinates) {
 						});
 
 						infoWindow.open(map);
-					
+					currentInfoWindow = infoWindow;
                     
                 } 
 				else if (polygonName === 'LLL Microwave') {
@@ -230,6 +235,7 @@ function checkMarkerInPolygons(coordinates) {
 						});
 
 						infoWindow.open(map);
+						currentInfoWindow = infoWindow;
 					
                     
                 }else if (polygonName === 'Fiber') {
@@ -244,6 +250,7 @@ function checkMarkerInPolygons(coordinates) {
 						});
 
 						infoWindow.open(map);
+						currentInfoWindow = infoWindow;
                     
                 }
 				
@@ -260,6 +267,7 @@ function checkMarkerInPolygons(coordinates) {
 						});
 
 						infoWindow.open(map);
+						currentInfoWindow = infoWindow;
 				
                 
             }
