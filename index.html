@@ -237,7 +237,19 @@ function checkMarkerInPolygons(coordinates) {
 
 						infoWindow.open(map);
 						currentInfoWindow = infoWindow;
-					
+				}else if (polygonName === 'sk') {
+					const infoWindow = new google.maps.InfoWindow({
+							content: `
+								<div style="width: 100px;">
+									<h3>LLL SK Haritna</h3>
+									<button onclick="window.location.href='https://www.blink.jo/sklead'">View</button>
+								</div>
+							`,
+							position: latLng
+						});
+
+						infoWindow.open(map);
+						currentInfoWindow = infoWindow;	
                     
                 }else if (polygonName === 'Fiber') {
 					const infoWindow = new google.maps.InfoWindow({
