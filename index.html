@@ -209,13 +209,13 @@ function checkMarkerInPolygons(coordinates) {
                     currentInfoWindow.close();
                 }
             if (insidePolygon) {
-                if (polygonName === 'Microwave') {
+                if (polygonName === 'haritna') {
 					  const infoWindow = new google.maps.InfoWindow({
 							content: `
 								<div style="width: 200px;">
 									<h3>You Are Covored by:</h3>
-									<h3>Neo Haritna Microwave</h3>
-									<button onclick="window.location.href='https://www.blink.jo/mwvlead'">View Offers</button>
+									<h3>Neo Haritna Service</h3>
+									<button onclick="window.location.href='https://www.blink.jo/haritnalead'">View Offers</button>
 								</div>
 							`,
 							position: latLng
@@ -225,13 +225,13 @@ function checkMarkerInPolygons(coordinates) {
 					currentInfoWindow = infoWindow;
                     
                 } 
-				else if (polygonName === 'LLL Microwave') {
+				else if (polygonName === 'airfiber') {
 					const infoWindow = new google.maps.InfoWindow({
 							content: `
 								<div style="width: 200px;">
 									<h3>You Are Covored by:</h3>
-									<h3>LLL Microwave</h3>
-									<button onclick="window.location.href='https://www.blink.jo/llllead'">View Offers</button>
+									<h3>air Fiber</h3>
+									<button onclick="window.location.href='https://www.blink.jo/airfiberlead'">View Offers</button>
 								</div>
 							`,
 							position: latLng
